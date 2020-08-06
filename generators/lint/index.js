@@ -11,12 +11,14 @@ module.exports = class extends Generator {
 
   writing() {
     const pkgJson = {
+      scripts: {
+        'lint': 'eslint --ignore-path .eslintignore ./',
+      },
       devDependencies: {
         'eslint': '^7.6.x',
         'eslint-config-airbnb-base': '^14.2.x',
         'eslint-plugin-chai-friendly': '^0.6.x',
         'eslint-plugin-import': '^2.22.x',
-  
       },
     };
 
