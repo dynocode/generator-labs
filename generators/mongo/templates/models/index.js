@@ -25,7 +25,7 @@ export function connectMongo(uri) {
     console.log('Connecting to mongoDB...');
     return mongoose.connect(process.env.DATABASE_URL, mongoConfig);
   }
-  throw new BaseError('Unable to connect to mongo db, missing connection options');
+  throw new Error('Unable to connect to mongo db, missing connection options');
 }
 
 export default models;
