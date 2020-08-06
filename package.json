@@ -1,0 +1,26 @@
+{
+  "name": "generator-labs",
+  "version": "1.0.0",
+  "description": "Create web apps",
+  "files": [
+    "generators"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "yeoman-generator"
+  ],
+  "author": "Dennis Lien",
+  "license": "ISC",
+  "dependencies": {
+    "yeoman-generator": "^4.11.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.6.x",
+    "eslint-config-airbnb-base": "^14.2.x",
+    "eslint-plugin-chai-friendly": "^0.6.x",
+    "eslint-plugin-import": "^2.22.x"
+  }
+}
