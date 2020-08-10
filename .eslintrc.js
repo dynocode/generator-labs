@@ -5,7 +5,7 @@ module.exports = {
   },
   extends: ['airbnb-base'],
   plugins: [
-    'chai-friendly'
+    'chai-friendly',
   ],
   env: {
     node: true,
@@ -15,12 +15,10 @@ module.exports = {
   rules: {
     'no-multiple-empty-lines': ['error'],
     'quote-props': ['error', 'consistent-as-needed'],
-    'indent': ['error', 2],
-    'no-multiple-empty-lines': ['error'],
     'no-unused-expressions': 0,
     'chai-friendly/no-unused-expressions': 2,
     'indent': ['error', 2, { SwitchCase: 1 }],
     'camelcase': 0,
-    'no-underscore-dangle': ['error', { 'allow': ['_id', '__set__', '__get__'] }],
+    'no-underscore-dangle': ['error', { allow: ['_id', '__set__', '__get__'] }],
   },
 };

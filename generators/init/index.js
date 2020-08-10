@@ -1,5 +1,3 @@
-const path = require('path');
-
 const Generator = require('yeoman-generator');
 
 const { defaultFilePaths, template } = require('../../lib/template');

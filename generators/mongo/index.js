@@ -4,19 +4,14 @@ const Generator = require('yeoman-generator');
  * Add MongoDb to a project
  */
 module.exports = class extends Generator {
-  constructor(args, opts) {
-    super(args, opts);
-
-  }
-
   async prompting() {
     this.answers = await this.prompt([
       {
         type: 'input',
         name: 'modelPath',
         message: 'Path to models',
-        default: './src/models'
-      }
+        default: './src/models',
+      },
     ]);
   }
 
@@ -41,5 +36,5 @@ module.exports = class extends Generator {
 
   install() {
     this.npmInstall();
-  } 
+  }
 };
