@@ -1,0 +1,64 @@
+bin
+obj
+csx
+.vs
+edge
+Publish
+.DEV/
+.TODO.md
+
+*.user
+*.suo
+*.cscfg
+*.Cache
+project.lock.json
+
+/packages
+/TestResults
+
+/tools/NuGet.exe
+/App_Data
+/secrets
+/data
+.secrets
+appsettings.json
+
+# Azure
+server/.vscode/settings.json
+
+# Package management
+node_modules
+dist
+.yarn
+.pnp.js
+
+# Test coverage
+.nyc_output
+
+*.sql
+.DS_Store
+
+# Local python packages
+.python_packages/
+
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.env.*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+.yarn/
+.pnp.js
+
+coverage/
+
+# Editor
+.vscode/
