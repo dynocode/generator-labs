@@ -10,6 +10,7 @@ module.exports = class extends Generator {
       prod: [],
     };
     this.pkgScripts = {};
+    this.ctx = {};
   }
 
   async prompting() {
@@ -61,6 +62,20 @@ module.exports = class extends Generator {
     }
   }
 
+  createContext() {
+    // TODO: ask if server &| client
+    const ctx = {
+      serverPath: './',
+      srcPath: './src',
+      babel: this.answer.useBabel,
+    };
+    if (this.answer && this.answer.serverClient) {
+      ctx.serverPath = './server';
+      ctx.srcPath = './server/src';
+    }
+    Object.assign(this.ctx, ctx);
+  }
+
   addBoilerplate() {
     template.copyTpl(this, defaultFilePaths.dockerCompose, 'docker-compose.yaml');
     template.copyTpl(this, defaultFilePaths.gitignore, '.gitignore');
@@ -69,20 +84,7 @@ module.exports = class extends Generator {
   }
 
   addServer() {
-    // TODO: ask if server &| client
-    const ctx = {
-      serverPath: './',
-      srcPath: 'src',
-      testPath: 'test',
-      modelsPath: 'models',
-      resolversPath: 'resolvers',
-      schemaPath: 'schema',
-      loggerParh: 'logger',
-    };
-    if (this.answer && this.answer.serverClient) {
-      ctx.serverPath = './server';
-    }
-
+    const { ctx } = this;
     const [basicProdDeps, basicDevDeps, basicScripts] = template
       .basicServerDefault(this, ctx.serverPath);
 
@@ -91,32 +93,44 @@ module.exports = class extends Generator {
     Object.assign(this.pkgScripts, basicScripts);
 
     const [modelsProdDeps, modelsDevDeps, modelsScripts] = template
-      .createModels(this, ctx.serverPath);
+      .createModels(this, ctx.srcPath);
 
     this.deps.prod.push(...modelsProdDeps);
     this.deps.dev.push(...modelsDevDeps);
     Object.assign(this.pkgScripts, modelsScripts);
 
     const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-      .createSchema(this, ctx.serverPath);
+      .createSchema(this, ctx.srcPath);
 
     this.deps.prod.push(...schemaProdDeps);
     this.deps.dev.push(...schemaDevDeps);
     Object.assign(this.pkgScripts, schemaScripts);
 
     const [resolversProdDeps, resolversDevDeps, resolversScripts] = template
-      .createResolvers(this, ctx.serverPath);
+      .createResolvers(this, ctx.srcPath);
 
     this.deps.prod.push(...resolversProdDeps);
     this.deps.dev.push(...resolversDevDeps);
     Object.assign(this.pkgScripts, resolversScripts);
 
     const [indexProdDeps, indexDevDeps, indexScripts] = template
-      .createServerIndex(this, ctx.serverPath);
+      .createServerIndex(this, ctx.srcPath);
 
     this.deps.prod.push(...indexProdDeps);
     this.deps.dev.push(...indexDevDeps);
     Object.assign(this.pkgScripts, indexScripts);
+  }
+
+  addBabel() {
+    const { ctx } = this;
+    if (ctx.babel) {
+      const [prodDeps, devDeps, scripts] = template
+        .createBasicBabel(this, ctx.serverPath);
+
+      this.deps.prod.push(...prodDeps);
+      this.deps.dev.push(...devDeps);
+      Object.assign(this.pkgScripts, scripts);
+    }
   }
 
   install() {
