@@ -78,10 +78,10 @@ module.exports = class extends Generator {
   }
 
   addBoilerplate() {
-    template.copyTpl(this, defaultFilePaths.dockerCompose, 'docker-compose.yaml');
-    template.copyTpl(this, defaultFilePaths.gitignore, '.gitignore');
-    template.copyTpl(this, defaultFilePaths.readme, 'README.md');
-    template.copyTpl(this, defaultFilePaths.editorconfig, '.editorconfig');
+    template.createDockerCompose(this, './');
+    template.createGitignore(this, './');
+    template.createReadme(this, './');
+    template.createEditorconfig(this, './');
   }
 
   addServer() {
