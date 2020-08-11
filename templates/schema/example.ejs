@@ -1,6 +1,6 @@
-const { gql } = require('apollo-server-express');
+<% if (importExport) { %>import { gql } from 'apollo-server-express';<% } %><% if (!importExport) { %>const { gql } = require('apollo-server-express');<% } %>
 
-module.exports = gql`
+<% if (importExport) { %>export default<% } %><% if (!importExport) { %>module.exports =<% } %> gql`
   extend type Query {
     Example(id: ID!): Example!
     Examples: [Example!]

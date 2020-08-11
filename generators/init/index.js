@@ -43,7 +43,7 @@ module.exports = class extends Generator {
         type: 'confirm',
         name: 'useBabel',
         message: 'Use Babel?',
-        default: false,
+        default: true,
       },
     ]);
   }
@@ -53,9 +53,9 @@ module.exports = class extends Generator {
       const useImport = await this.prompt([
         {
           type: 'confirm',
-          name: 'useBabel',
+          name: 'importExport',
           message: 'Use import/export?',
-          default: false,
+          default: true,
         },
       ]);
       Object.assign(this.answer, useImport);
@@ -68,6 +68,7 @@ module.exports = class extends Generator {
       serverPath: './',
       srcPath: './src',
       babel: this.answer.useBabel,
+      importExport: this.answer.importExport || false,
     };
     if (this.answer && this.answer.serverClient) {
       ctx.serverPath = './server';
@@ -93,28 +94,36 @@ module.exports = class extends Generator {
     Object.assign(this.pkgScripts, basicScripts);
 
     const [modelsProdDeps, modelsDevDeps, modelsScripts] = template
-      .createModels(this, ctx.srcPath);
+      .createModels(this, ctx.srcPath, {
+        importExport: ctx.importExport,
+      });
 
     this.deps.prod.push(...modelsProdDeps);
     this.deps.dev.push(...modelsDevDeps);
     Object.assign(this.pkgScripts, modelsScripts);
 
     const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-      .createSchema(this, ctx.srcPath);
+      .createSchema(this, ctx.srcPath, {
+        importExport: ctx.importExport,
+      });
 
     this.deps.prod.push(...schemaProdDeps);
     this.deps.dev.push(...schemaDevDeps);
     Object.assign(this.pkgScripts, schemaScripts);
 
     const [resolversProdDeps, resolversDevDeps, resolversScripts] = template
-      .createResolvers(this, ctx.srcPath);
+      .createResolvers(this, ctx.srcPath, {
+        importExport: ctx.importExport,
+      });
 
     this.deps.prod.push(...resolversProdDeps);
     this.deps.dev.push(...resolversDevDeps);
     Object.assign(this.pkgScripts, resolversScripts);
 
     const [indexProdDeps, indexDevDeps, indexScripts] = template
-      .createServerIndex(this, ctx.srcPath);
+      .createServerIndex(this, ctx.srcPath, {
+        importExport: ctx.importExport,
+      });
 
     this.deps.prod.push(...indexProdDeps);
     this.deps.dev.push(...indexDevDeps);

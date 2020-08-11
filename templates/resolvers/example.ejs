@@ -1,4 +1,4 @@
-module.exports = {
+<% if (importExport) { %>export default<% } %><% if (!importExport) { %>module.exports =<% } %> {
   Query: {
     Example: async (parent, input, ctx) => ctx.models.Example.findOne({ _id: input.id }),
     Examples: async (parent, input, ctx) => ctx.models.Example.find(),
