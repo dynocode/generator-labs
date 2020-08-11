@@ -1,13 +1,12 @@
 const Generator = require('yeoman-generator');
 
+const { template } = require('../../lib/template');
+
 /**
- * Add editorconfig to a project
+ * Add Lint to a project
  */
 module.exports = class extends Generator {
-  writing() {
-    this.fs.copyTpl(
-      this.templatePath('.editorconfig'),
-      this.destinationPath('.editorconfig'),
-    );
+  addLint() {
+    template.createEditorconfig(this, './');
   }
 };
