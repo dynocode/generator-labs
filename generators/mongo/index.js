@@ -1,40 +1,86 @@
 const Generator = require('yeoman-generator');
 
+const { template } = require('../../lib/template');
+
 /**
- * Add MongoDb to a project
+ * Add Lint to a project
  */
 module.exports = class extends Generator {
-  async prompting() {
-    this.answers = await this.prompt([
-      {
-        type: 'input',
-        name: 'modelPath',
-        message: 'Path to models',
-        default: './src/models',
-      },
-    ]);
+  constructor(args, opts) {
+    super(args, opts);
+    this.deps = {
+      dev: [],
+      prod: [],
+    };
+    this.pkgScripts = {};
+    this.ctx = {};
+    this.argument('modelName', { type: String, desc: 'name of the file and the model', required: false });
   }
 
-  writing() {
-    // Ask to add `mongodb-memory-server`
-    const dependencies = {
-      'mongo-sanitize': '^1.1.x',
-      'mongoose': '^5.9.x',
-    };
-    const pkgJson = {
-      dependencies,
-    };
+  getContext() {
+    const ctx = this.config.getAll();
+    Object.assign(this.ctx, ctx);
+  }
 
-    // Extend or create package.json file in destination path
-    this.fs.extendJSON(this.destinationPath('package.json'), pkgJson);
+  setUpMongo() {
+    const { ctx } = this;
+    if (!ctx.modelsDir) {
+      this.log.info('Models not set up, setting up now... /n');
+      const [modelsProdDeps, modelsDevDeps, modelsScripts] = template
+        .createModels(this, ctx.srcPath || './src', {
+          importExport: ctx.importExport || true,
+        });
 
-    this.fs.copyTpl(
-      this.templatePath('models/index.js'),
-      this.destinationPath(`${this.answers.modelPath}/index.js`),
-    );
+      this.deps.prod.push(...modelsProdDeps);
+      this.deps.dev.push(...modelsDevDeps);
+      Object.assign(this.pkgScripts, modelsScripts);
+    }
+  }
+
+  newMongoModel() {
+    const { ctx } = this;
+    if (ctx.modelsDir) {
+      this.log('Models already set up, creating new model... \n');
+      if (!this.options.modelName) {
+        this.log.error('Missing model name: yo labs:model [name] \n');
+        this.log(this.help());
+        process.exit(1);
+      }
+      const fileName = this.options.modelName
+        .trim()
+        .toLowerCase();
+
+      const modelName = fileName.split('-').map((item) => {
+        const firstChar = item.substring(0, 1).toUpperCase();
+        return `${firstChar}${item.substring(1)}`;
+      }).join('');
+
+      const [modelsProdDeps, modelsDevDeps, modelsScripts] = template
+        .createModel(this, ctx.srcPath || './src', fileName, {
+          importExport: ctx.importExport || true,
+          name: modelName,
+        });
+
+      this.deps.prod.push(...modelsProdDeps);
+      this.deps.dev.push(...modelsDevDeps);
+      Object.assign(this.pkgScripts, modelsScripts);
+    }
   }
 
   install() {
-    this.npmInstall();
+    const { ctx } = this;
+    if (!ctx.modelsDir) {
+      const scripts = this.pkgScripts;
+      const pkgJson = {
+        scripts: {
+          ...scripts,
+        },
+      };
+
+      // Extend or create package.json file in destination path
+      this.fs.extendJSON(this.destinationPath('package.json'), pkgJson);
+      this.npmInstall(this.deps.prod, { 'save-dev': false });
+      this.npmInstall(this.deps.dev, { 'save-dev': true });
+    }
   }
 };
