@@ -75,6 +75,7 @@ module.exports = class extends Generator {
       ctx.srcPath = './server/src';
     }
     Object.assign(this.ctx, ctx);
+    this.config.set(ctx);
   }
 
   addBoilerplate() {
