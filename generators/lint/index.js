@@ -4,15 +4,10 @@ const Generator = require('yeoman-generator');
  * Add Lint to a project
  */
 module.exports = class extends Generator {
-  constructor(args, opts) {
-    super(args, opts);
-
-  }
-
   writing() {
     const pkgJson = {
       scripts: {
-        'lint': 'eslint --ignore-path .eslintignore ./',
+        lint: 'eslint --ignore-path .eslintignore ./',
       },
       devDependencies: {
         'eslint': '^7.6.x',
@@ -41,5 +36,5 @@ module.exports = class extends Generator {
     // this.npmInstall(['eslint-config-airbnb-base'], { 'save-dev': true });
     // this.npmInstall(['eslint-plugin-chai-friendly'], { 'save-dev': true });
     // this.npmInstall(['eslint-plugin-import'], { 'save-dev': true });
-  } 
+  }
 };

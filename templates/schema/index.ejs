@@ -1,0 +1,27 @@
+<% if (importExport) { %>import { gql } from 'apollo-server-express';
+import exampleSchema from './example';<% } %><% if (!importExport) { %>const { gql } = require('apollo-server-express');
+const exampleSchema = require('./example');<% } %>
+
+const baseSchema = gql`
+  scalar Date
+  scalar DateTime
+  scalar Time
+  scalar Search
+
+  type Query {
+    ping: String
+  }
+
+  type Mutation {
+    _: Boolean
+  }
+
+  type Subscription {
+    _: Boolean
+  }
+`;
+
+<% if (importExport) { %>export default {<% } %><% if (!importExport) { %>module.exports = {<% } %>
+  baseSchema,
+  exampleSchema,
+};

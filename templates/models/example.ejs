@@ -1,0 +1,21 @@
+<% if (importExport) { %>import mongoose from 'mongoose';<% } %><% if (!importExport) { %>const mongoose = require('mongoose');<% } %>
+
+const mongoSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: '{PATH} is required!',
+    },
+    value: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+const mongoModel = mongoose.model('Example', mongoSchema);
+
+<% if (importExport) { %>export default mongoModel;<% } %><% if (!importExport) { %>module.exports = mongoModel;<% } %>

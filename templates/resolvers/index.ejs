@@ -1,0 +1,7 @@
+<% if (importExport) { %>import example from './example';<% } %><% if (!importExport) { %>const example = require('./example');<% } %>
+
+const resolvers = [
+  example,
+];
+
+<% if (importExport) { %>export default<% } %><% if (!importExport) { %>module.exports =<% } %> resolvers;
