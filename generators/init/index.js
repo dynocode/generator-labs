@@ -12,18 +12,54 @@ module.exports = class extends Generator {
     this.pkgScripts = {};
   }
 
-  // async prompting() {
-  //   this.answer = await this.prompt([
-  //     {
-  //       type: 'input',
-  //       name: 'name',
-  //       message: 'Your project name',
-  //       default: this.appname,
-  //     },
-  //     // TS/JS?
-  //     // babel?
-  //   ]);
-  // }
+  async prompting() {
+    this.answer = await this.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: 'Your project name',
+        default: this.appname,
+      },
+      {
+        type: 'list',
+        name: 'language',
+        message: 'Select language',
+        choices: [
+          'JS',
+          'TS',
+        ],
+      },
+      {
+        type: 'list',
+        name: 'runtime',
+        message: 'Select runtime',
+        choices: [
+          'Node',
+          'Deno',
+        ],
+      },
+      {
+        type: 'confirm',
+        name: 'useBabel',
+        message: 'Use Babel?',
+        default: false,
+      },
+    ]);
+  }
+
+  async importRequirePrompt() {
+    if (this.answer.useBabel) {
+      const useImport = await this.prompt([
+        {
+          type: 'confirm',
+          name: 'useBabel',
+          message: 'Use import/export?',
+          default: false,
+        },
+      ]);
+      Object.assign(this.answer, useImport);
+    }
+  }
 
   addBoilerplate() {
     template.copyTpl(this, defaultFilePaths.dockerCompose, 'docker-compose.yaml');
@@ -86,6 +122,8 @@ module.exports = class extends Generator {
   install() {
     const scripts = this.pkgScripts;
     const pkgJson = {
+      name: this.answer.name,
+      version: '1.0.0',
       scripts: {
         ...scripts,
       },
