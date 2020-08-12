@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Create web apps",
   "files": [
-    "generators"
+    "generators",
+    "lib",
+    "templates"
   ],
   "main": "index.js",
   "scripts": {
