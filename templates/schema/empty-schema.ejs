@@ -1,0 +1,25 @@
+<% if (importExport) { %>import { gql } from 'apollo-server-express';<% } %><% if (!importExport) { %>const { gql } = require('apollo-server-express');<% } %>
+
+<% if (importExport) { %>export default<% } %><% if (!importExport) { %>module.exports =<% } %> gql`
+  extend type Query {
+    <%= name %>(id: ID!): <%= name %>!
+    <%= name %>s: [<%= name %>!]
+  }
+
+  extend type Mutation {
+    create<%= name %>(
+
+    ): <%= name %>!
+    update<%= name %>(
+      id: ID!
+    ): <%= name %>!
+    delete<%= name %>(id: ID!): <%= name %>!
+  }
+
+  type <%= name %> {
+    id: ID!
+
+    createdAt: DateTime
+    updatedAt: DateTime
+  }
+`;

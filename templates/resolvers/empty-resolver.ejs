@@ -1,0 +1,9 @@
+<% if (importExport) { %>export default<% } %><% if (!importExport) { %>module.exports =<% } %> {
+  Query: {
+    <%= name %>: async (parent, input, ctx) => ctx.models.<%= name %>.findOne({ _id: input.id }),
+    <%= name %>s: async (parent, input, ctx) => ctx.models.<%= name %>.find(),
+  },
+  Mutation: {
+    create<%= name %>: async (parent, input, ctx) => ctx.models.<%= name %>.create(input),
+  },
+};
