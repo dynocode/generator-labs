@@ -1,0 +1,14 @@
+<% if (importExport) { %>import mongoose from 'mongoose';<% } %><% if (!importExport) { %>const mongoose = require('mongoose');<% } %>
+
+const mongoSchema = new mongoose.Schema(
+  {
+   
+  },
+  {
+    timestamps: true,
+  },
+);
+
+const mongoModel = mongoose.model('<%= name %> ', mongoSchema);
+
+<% if (importExport) { %>export default mongoModel;<% } %><% if (!importExport) { %>module.exports = mongoModel;<% } %>
