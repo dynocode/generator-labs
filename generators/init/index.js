@@ -1,6 +1,6 @@
 const Generator = require('yeoman-generator');
 
-const { defaultFilePaths, template } = require('../../lib/template');
+const { template } = require('../../lib/template');
 
 module.exports = class extends Generator {
   constructor(args, opts) {
@@ -78,22 +78,24 @@ module.exports = class extends Generator {
     this.config.set(ctx);
   }
 
-  addBoilerplate() {
+  addMinimumBoilerplate() {
+    const { ctx } = this;
+
     template.createDockerCompose(this, './');
     template.createGitignore(this, './');
     template.createReadme(this, './');
     template.createEditorconfig(this, './');
-  }
 
-  addServer() {
-    const { ctx } = this;
     const [basicProdDeps, basicDevDeps, basicScripts] = template
       .basicServerDefault(this, ctx.serverPath);
 
     this.deps.prod.push(...basicProdDeps);
     this.deps.dev.push(...basicDevDeps);
     Object.assign(this.pkgScripts, basicScripts);
+  }
 
+  initModels() {
+    const { ctx } = this;
     const [modelsProdDeps, modelsDevDeps, modelsScripts] = template
       .createModels(this, ctx.srcPath, {
         importExport: ctx.importExport,
@@ -102,7 +104,10 @@ module.exports = class extends Generator {
     this.deps.prod.push(...modelsProdDeps);
     this.deps.dev.push(...modelsDevDeps);
     Object.assign(this.pkgScripts, modelsScripts);
+  }
 
+  initGqlSchema() {
+    const { ctx } = this;
     const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
       .createSchema(this, ctx.srcPath, {
         importExport: ctx.importExport,
@@ -111,7 +116,10 @@ module.exports = class extends Generator {
     this.deps.prod.push(...schemaProdDeps);
     this.deps.dev.push(...schemaDevDeps);
     Object.assign(this.pkgScripts, schemaScripts);
+  }
 
+  initGqlResolver() {
+    const { ctx } = this;
     const [resolversProdDeps, resolversDevDeps, resolversScripts] = template
       .createResolvers(this, ctx.srcPath, {
         importExport: ctx.importExport,
@@ -120,6 +128,10 @@ module.exports = class extends Generator {
     this.deps.prod.push(...resolversProdDeps);
     this.deps.dev.push(...resolversDevDeps);
     Object.assign(this.pkgScripts, resolversScripts);
+  }
+
+  initServer() {
+    const { ctx } = this;
 
     const [indexProdDeps, indexDevDeps, indexScripts] = template
       .createServerIndex(this, ctx.srcPath, {
@@ -131,7 +143,7 @@ module.exports = class extends Generator {
     Object.assign(this.pkgScripts, indexScripts);
   }
 
-  addBabel() {
+  initBabel() {
     const { ctx } = this;
     if (ctx.babel) {
       const [prodDeps, devDeps, scripts] = template
