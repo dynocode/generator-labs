@@ -18,6 +18,10 @@
   "author": "Dennis Lien",
   "license": "ISC",
   "dependencies": {
+    "@babel/generator": "^7.11.0",
+    "@babel/parser": "^7.11.3",
+    "@babel/traverse": "^7.11.0",
+    "@babel/types": "^7.11.0",
     "yeoman-generator": "^4.11.0"
   },
   "devDependencies": {
