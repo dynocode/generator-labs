@@ -1,25 +1,60 @@
-const Generator = require('yeoman-generator');
+const path = require('path');
+
+const Generator = require('../../lib/generator/base');
 
 const { template } = require('../../lib/template');
+const { getFilePathToAllFilesInDir } = require('../../lib/fs');
 
-/**
- * Add Lint to a project
- */
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
-    this.deps = {
-      dev: [],
-      prod: [],
-    };
-    this.pkgScripts = {};
-    this.ctx = {};
     this.argument('schemaName', { type: String, desc: 'name of the file and the schema', required: false });
+    this.required = ['modelsDir', 'schemaDir'];
+    this.modelBase = '';
   }
 
-  getContext() {
-    const ctx = this.config.getAll();
-    Object.assign(this.ctx, ctx);
+  async init() {
+    await this.resolveRequired();
+  }
+
+  async baseSchemaOnModelAsk() {
+    const ask = {
+      type: 'confirm',
+      name: 'modelBasedOnSchema',
+      message: 'Use a model as base?',
+      default: true,
+    };
+    this.useModelAsBase = (await this.prompt([ask])).modelBasedOnSchema;
+  }
+
+  async getSchemaModelBase() {
+    if (this.useModelAsBase) {
+      const modelFilesFullPath = await getFilePathToAllFilesInDir(this.ctx.modelsDir);
+      const modelFileNames = modelFilesFullPath.map((item) => item.replace(this.ctx.modelsDir, ''));
+      let matchInput;
+      if (this.options.schemaName) {
+        matchInput = modelFileNames.find((item) => {
+          const name = item.replace('.js', '').replace('/', '');
+          if (this.options.schemaName === name) {
+            return true;
+          }
+          return false;
+        });
+      }
+      const ask = {
+        type: 'list',
+        name: 'baseModel',
+        message: 'What model to base schema on?',
+        choices: modelFileNames,
+      };
+
+      if (matchInput) {
+        ask.default = matchInput;
+      }
+
+      this.modelAsk = await this.prompt([ask]);
+      this.modelBase = path.join(this.ctx.modelsDir, this.modelAsk.baseModel);
+    }
   }
 
   setUpSchema() {
