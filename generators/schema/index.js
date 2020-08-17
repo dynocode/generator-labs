@@ -4,7 +4,7 @@ const Generator = require('../../lib/generator/base');
 
 const { template } = require('../../lib/template');
 const { getFilePathToAllFilesInDir } = require('../../lib/fs');
-const { getAstFromCode, getModelDefFromAst } = require('../../lib/AST/mongo-model');
+const ast = require('../../lib/AST');
 const { createSchemaFromModelDef } = require('../../lib/schema');
 
 module.exports = class extends Generator {
@@ -86,8 +86,8 @@ module.exports = class extends Generator {
     }
     const modelPath = this.modelBasePath;
     const file = this.fs.read(modelPath);
-    const ast = getAstFromCode(file);
-    const modelDef = getModelDefFromAst(ast);
+    const astRes = ast.getAstFromCode(file);
+    const modelDef = ast.mongo.getModelDefFromAst(astRes);
     const schemaData = createSchemaFromModelDef(modelDef);
     const query = Object.values(schemaData.query).join('\n');
     const mutations = Object.values(schemaData.mutations).join('\n');
