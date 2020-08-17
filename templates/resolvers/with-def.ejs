@@ -1,0 +1,15 @@
+<% if (importExport) { %>export default<% } %><% if (!importExport) { %>module.exports =<% } %> {
+  Query: {
+    /**
+     * MODEL_NAME_HERE: the name of the mongoModel
+     * METHOD_HERE: mongo/mongoose method. eg. findOne(), create()
+     * ARGS_HERE: mongo/mongoose method args.
+     */
+    <% Query.forEach(function(item){ %><%= item %>: async (parent, input, ctx) => ctx.models.MODEL_NAME_HERE.METHOD_HERE(ARGS_HERE),
+    <% }); %>
+  },
+  Mutation: {
+    <% Mutation.forEach(function(item){ %><%= item %>: async (parent, input, ctx) => ctx.models.MODEL_NAME_HERE.METHOD_HERE(ARGS_HERE),
+    <% }); %>
+  },
+};
