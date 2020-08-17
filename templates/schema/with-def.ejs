@@ -1,0 +1,11 @@
+<% if (importExport) { %>import { gql } from 'apollo-server-express';<% } %><% if (!importExport) { %>const { gql } = require('apollo-server-express');<% } %>
+
+<% if (importExport) { %>export default<% } %><% if (!importExport) { %>module.exports =<% } %> gql`
+  extend type Query {
+    <%= query %>
+  }
+
+  extend type Mutation {  <%= mutations %> 
+  }
+  
+  <%= typeDef %>`;

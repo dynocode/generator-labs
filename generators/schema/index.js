@@ -1,46 +1,107 @@
-const Generator = require('yeoman-generator');
+const path = require('path');
+
+const Generator = require('../../lib/generator/base');
 
 const { template } = require('../../lib/template');
+const { getFilePathToAllFilesInDir } = require('../../lib/fs');
+const { getAstFromCode, getModelDefFromAst } = require('../../lib/AST/mongo-model');
+const { createSchemaFromModelDef } = require('../../lib/schema');
 
-/**
- * Add Lint to a project
- */
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
-    this.deps = {
-      dev: [],
-      prod: [],
-    };
-    this.pkgScripts = {};
-    this.ctx = {};
     this.argument('schemaName', { type: String, desc: 'name of the file and the schema', required: false });
+    this.required = ['modelsDir', 'schemaDir', 'importExport'];
+    this.modelBasePath = '';
+    this.isNewModel = true;
   }
 
-  getContext() {
-    const ctx = this.config.getAll();
-    Object.assign(this.ctx, ctx);
+  async init() {
+    await this.resolveRequired();
+    if (!this.options.schemaName && !this.ctx.haveSchema) {
+      this.isNewModel = false;
+    }
   }
 
   setUpSchema() {
     const { ctx } = this;
-    if (!ctx.schemaDir) {
+    if (!ctx.haveSchema) {
       this.log.info('Schema not set up, setting up now... /n');
       const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
         .createSchema(this, ctx.srcPath || './src', {
           importExport: ctx.importExport || true,
         });
-
+      this.config.set({ haveSchema: true });
       this.deps.prod.push(...schemaProdDeps);
       this.deps.dev.push(...schemaDevDeps);
       Object.assign(this.pkgScripts, schemaScripts);
     }
   }
 
+  async baseSchemaOnModelAsk() {
+    if (this.isNewModel) {
+      const ask = {
+        type: 'confirm',
+        name: 'modelBasedOnSchema',
+        message: 'Use a model as base?',
+        default: true,
+      };
+      this.useModelAsBase = (await this.prompt([ask])).modelBasedOnSchema;
+    }
+  }
+
+  async getSchemaModelBase() {
+    if (this.useModelAsBase && this.isNewModel) {
+      const modelFilesFullPath = await getFilePathToAllFilesInDir(this.ctx.modelsDir);
+      const modelFileNames = modelFilesFullPath.map((item) => item.replace(this.ctx.modelsDir, ''));
+      let matchInput;
+      if (this.options.schemaName) {
+        matchInput = modelFileNames.find((item) => {
+          const name = item.replace('.js', '').replace('/', '');
+          if (this.options.schemaName === name) {
+            return true;
+          }
+          return false;
+        });
+      }
+      const ask = {
+        type: 'list',
+        name: 'baseModel',
+        message: 'What model to base schema on?',
+        choices: modelFileNames,
+      };
+
+      if (matchInput) {
+        ask.default = matchInput;
+      }
+
+      this.modelAsk = await this.prompt([ask]);
+      this.modelBasePath = path.join(this.ctx.modelsDir, this.modelAsk.baseModel);
+    }
+  }
+
+  getBaseModel() {
+    if (!this.useModelAsBase || !this.modelBasePath || !this.isNewModel) {
+      return null;
+    }
+    const modelPath = this.modelBasePath;
+    const file = this.fs.read(modelPath);
+    const ast = getAstFromCode(file);
+    const modelDef = getModelDefFromAst(ast);
+    const schemaData = createSchemaFromModelDef(modelDef);
+    const query = Object.values(schemaData.query).join('\n');
+    const mutations = Object.values(schemaData.mutations).join('\n');
+    return template.createNewSchemaWithDef(this, this.ctx.schemaDir, this.options.schemaName, {
+      ...this.ctx,
+      query,
+      mutations,
+      typeDef: schemaData.typeDef,
+    });
+  }
+
   newSchema() {
     const { ctx } = this;
-    if (ctx.schemaDir) {
-      this.log('Schema already set up, creating new schema... \n');
+    if (!this.useModelAsBase && this.isNewModel) {
       if (!this.options.schemaName) {
         this.log.error('Missing schema name: yo labs:schema [name] \n');
         this.log(this.help());
@@ -68,8 +129,7 @@ module.exports = class extends Generator {
   }
 
   install() {
-    const { ctx } = this;
-    if (!ctx.schemaDir) {
+    if (this.deps.prod.length > 0 || this.deps.dev.length > 0) {
       const scripts = this.pkgScripts;
       const pkgJson = {
         scripts: {

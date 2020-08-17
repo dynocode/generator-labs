@@ -100,7 +100,7 @@ module.exports = class extends Generator {
       .createModels(this, ctx.srcPath, {
         importExport: ctx.importExport,
       });
-
+    this.config.set({ haveModel: true });
     this.deps.prod.push(...modelsProdDeps);
     this.deps.dev.push(...modelsDevDeps);
     Object.assign(this.pkgScripts, modelsScripts);
@@ -112,7 +112,7 @@ module.exports = class extends Generator {
       .createSchema(this, ctx.srcPath, {
         importExport: ctx.importExport,
       });
-
+    this.config.set({ haveSchema: true });
     this.deps.prod.push(...schemaProdDeps);
     this.deps.dev.push(...schemaDevDeps);
     Object.assign(this.pkgScripts, schemaScripts);
@@ -124,7 +124,7 @@ module.exports = class extends Generator {
       .createResolvers(this, ctx.srcPath, {
         importExport: ctx.importExport,
       });
-
+    this.config.set({ haveResolver: true });
     this.deps.prod.push(...resolversProdDeps);
     this.deps.dev.push(...resolversDevDeps);
     Object.assign(this.pkgScripts, resolversScripts);
