@@ -13,24 +13,45 @@ module.exports = class extends Generator {
     this.argument('schemaName', { type: String, desc: 'name of the file and the schema', required: false });
     this.required = ['modelsDir', 'schemaDir', 'importExport'];
     this.modelBasePath = '';
+    this.isNewModel = true;
   }
 
   async init() {
     await this.resolveRequired();
+    if (!this.options.schemaName && !this.ctx.haveSchema) {
+      this.isNewModel = false;
+    }
+  }
+
+  setUpSchema() {
+    const { ctx } = this;
+    if (!ctx.haveSchema) {
+      this.log.info('Schema not set up, setting up now... /n');
+      const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
+        .createSchema(this, ctx.srcPath || './src', {
+          importExport: ctx.importExport || true,
+        });
+      this.config.set({ haveSchema: true });
+      this.deps.prod.push(...schemaProdDeps);
+      this.deps.dev.push(...schemaDevDeps);
+      Object.assign(this.pkgScripts, schemaScripts);
+    }
   }
 
   async baseSchemaOnModelAsk() {
-    const ask = {
-      type: 'confirm',
-      name: 'modelBasedOnSchema',
-      message: 'Use a model as base?',
-      default: true,
-    };
-    this.useModelAsBase = (await this.prompt([ask])).modelBasedOnSchema;
+    if (this.isNewModel) {
+      const ask = {
+        type: 'confirm',
+        name: 'modelBasedOnSchema',
+        message: 'Use a model as base?',
+        default: true,
+      };
+      this.useModelAsBase = (await this.prompt([ask])).modelBasedOnSchema;
+    }
   }
 
   async getSchemaModelBase() {
-    if (this.useModelAsBase) {
+    if (this.useModelAsBase && this.isNewModel) {
       const modelFilesFullPath = await getFilePathToAllFilesInDir(this.ctx.modelsDir);
       const modelFileNames = modelFilesFullPath.map((item) => item.replace(this.ctx.modelsDir, ''));
       let matchInput;
@@ -60,89 +81,66 @@ module.exports = class extends Generator {
   }
 
   getBaseModel() {
-    if (!this.useModelAsBase || !this.modelBasePath) {
+    if (!this.useModelAsBase || !this.modelBasePath || !this.isNewModel) {
       return null;
     }
     const modelPath = this.modelBasePath;
-    try {
-      const file = this.fs.read(modelPath);
-      const ast = getAstFromCode(file);
-      const modelDef = getModelDefFromAst(ast);
-      const schemaData = createSchemaFromModelDef(modelDef);
-      const query = Object.values(schemaData.query).join('\n');
-      const mutations = Object.values(schemaData.mutations).join('\n');
-      template.createNewSchemaWithDef(this, this.ctx.schemaDir, this.options.schemaName, {
-        ...this.ctx,
-        query,
-        mutations,
-        typeDef: schemaData.typeDef,
-      });
-    } catch (error) {
-      console.log('********  **********');
-      console.log(error);
-      console.log('********  END *********');
+    const file = this.fs.read(modelPath);
+    const ast = getAstFromCode(file);
+    const modelDef = getModelDefFromAst(ast);
+    const schemaData = createSchemaFromModelDef(modelDef);
+    const query = Object.values(schemaData.query).join('\n');
+    const mutations = Object.values(schemaData.mutations).join('\n');
+    return template.createNewSchemaWithDef(this, this.ctx.schemaDir, this.options.schemaName, {
+      ...this.ctx,
+      query,
+      mutations,
+      typeDef: schemaData.typeDef,
+    });
+  }
+
+  newSchema() {
+    const { ctx } = this;
+    if (!this.useModelAsBase && this.isNewModel) {
+      if (!this.options.schemaName) {
+        this.log.error('Missing schema name: yo labs:schema [name] \n');
+        this.log(this.help());
+        process.exit(1);
+      }
+      const fileName = this.options.schemaName
+        .trim()
+        .toLowerCase();
+
+      const schemaName = fileName.split('-').map((item) => {
+        const firstChar = item.substring(0, 1).toUpperCase();
+        return `${firstChar}${item.substring(1)}`;
+      }).join('');
+
+      const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
+        .createNewSchema(this, ctx.srcPath || './src', fileName, {
+          importExport: ctx.importExport || true,
+          name: schemaName,
+        });
+
+      this.deps.prod.push(...schemaProdDeps);
+      this.deps.dev.push(...schemaDevDeps);
+      Object.assign(this.pkgScripts, schemaScripts);
     }
   }
 
-  // setUpSchema() {
-  //   const { ctx } = this;
-  //   if (!ctx.schemaDir) {
-  //     this.log.info('Schema not set up, setting up now... /n');
-  //     const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-  //       .createSchema(this, ctx.srcPath || './src', {
-  //         importExport: ctx.importExport || true,
-  //       });
+  install() {
+    if (this.deps.prod.length > 0 || this.deps.dev.length > 0) {
+      const scripts = this.pkgScripts;
+      const pkgJson = {
+        scripts: {
+          ...scripts,
+        },
+      };
 
-  //     this.deps.prod.push(...schemaProdDeps);
-  //     this.deps.dev.push(...schemaDevDeps);
-  //     Object.assign(this.pkgScripts, schemaScripts);
-  //   }
-  // }
-
-  // newSchema() {
-  //   const { ctx } = this;
-  //   if (ctx.schemaDir) {
-  //     this.log('Schema already set up, creating new schema... \n');
-  //     if (!this.options.schemaName) {
-  //       this.log.error('Missing schema name: yo labs:schema [name] \n');
-  //       this.log(this.help());
-  //       process.exit(1);
-  //     }
-  //     const fileName = this.options.schemaName
-  //       .trim()
-  //       .toLowerCase();
-
-  //     const schemaName = fileName.split('-').map((item) => {
-  //       const firstChar = item.substring(0, 1).toUpperCase();
-  //       return `${firstChar}${item.substring(1)}`;
-  //     }).join('');
-
-  //     const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-  //       .createNewSchema(this, ctx.srcPath || './src', fileName, {
-  //         importExport: ctx.importExport || true,
-  //         name: schemaName,
-  //       });
-
-  //     this.deps.prod.push(...schemaProdDeps);
-  //     this.deps.dev.push(...schemaDevDeps);
-  //     Object.assign(this.pkgScripts, schemaScripts);
-  //   }
-  // }
-
-  // install() {
-  //   const { ctx } = this;
-  //   if (!ctx.schemaDir) {
-  //     const scripts = this.pkgScripts;
-  //     const pkgJson = {
-  //       scripts: {
-  //         ...scripts,
-  //       },
-  //     };
-
-  //     // Extend or create package.json file in destination path
-  //     this.fs.extendJSON(this.destinationPath('package.json'), pkgJson);
-  //     this.npmInstall(this.deps.prod, { 'save-dev': false });
-  //     this.npmInstall(this.deps.dev, { 'save-dev': true });
-  //   }
-  // }
+      // Extend or create package.json file in destination path
+      this.fs.extendJSON(this.destinationPath('package.json'), pkgJson);
+      this.npmInstall(this.deps.prod, { 'save-dev': false });
+      this.npmInstall(this.deps.dev, { 'save-dev': true });
+    }
+  }
 };
