@@ -1,4 +1,4 @@
-const Generator = require('yeoman-generator');
+const Generator = require('../../lib/generator/base');
 
 const { template } = require('../../lib/template');
 
@@ -8,28 +8,25 @@ const { template } = require('../../lib/template');
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
-    this.deps = {
-      dev: [],
-      prod: [],
-    };
-    this.pkgScripts = {};
-    this.ctx = {};
+    this.required = ['modelDir', 'importExport'];
     this.argument('modelName', { type: String, desc: 'name of the file and the model', required: false });
   }
 
-  getContext() {
-    const ctx = this.config.getAll();
-    Object.assign(this.ctx, ctx);
+  async init() {
+    await this.resolveRequired();
+    this.isNew = this.ctx.haveModel;
   }
 
   setUpMongo() {
     const { ctx } = this;
-    if (!ctx.modelDir) {
+    if (!ctx.haveModel) {
       this.log.info('Models not set up, setting up now... /n');
       const [modelsProdDeps, modelsDevDeps, modelsScripts] = template
         .createModels(this, ctx.srcPath || './src', {
           importExport: ctx.importExport || true,
         });
+
+      this.config.set({ haveModel: true });
 
       this.deps.prod.push(...modelsProdDeps);
       this.deps.dev.push(...modelsDevDeps);
@@ -39,7 +36,7 @@ module.exports = class extends Generator {
 
   newMongoModel() {
     const { ctx } = this;
-    if (ctx.modelDir) {
+    if (this.isNew) {
       this.log('Models already set up, creating new model... \n');
       if (!this.options.modelName) {
         this.log.error('Missing model name: yo labs:model [name] \n');
@@ -68,8 +65,7 @@ module.exports = class extends Generator {
   }
 
   install() {
-    const { ctx } = this;
-    if (!ctx.modelDir) {
+    if (!this.isNew) {
       const scripts = this.pkgScripts;
       const pkgJson = {
         scripts: {
