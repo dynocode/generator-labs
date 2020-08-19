@@ -11,7 +11,7 @@ module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
     this.argument('schemaName', { type: String, desc: 'name of the file and the schema', required: false });
-    this.required = ['modelsDir', 'schemaDir', 'importExport'];
+    this.required = ['modelDir', 'schemaDir', 'importExport'];
     this.modelBasePath = '';
     this.isNewModel = true;
   }
@@ -52,8 +52,8 @@ module.exports = class extends Generator {
 
   async getSchemaModelBase() {
     if (this.useModelAsBase && this.isNewModel) {
-      const modelFilesFullPath = await getFilePathToAllFilesInDir(this.ctx.modelsDir);
-      const modelFileNames = modelFilesFullPath.map((item) => item.replace(this.ctx.modelsDir, ''));
+      const modelFilesFullPath = await getFilePathToAllFilesInDir(this.ctx.modelDir);
+      const modelFileNames = modelFilesFullPath.map((item) => item.replace(this.ctx.modelDir, ''));
       let matchInput;
       if (this.options.schemaName) {
         matchInput = modelFileNames.find((item) => {
@@ -76,7 +76,7 @@ module.exports = class extends Generator {
       }
 
       this.modelAsk = await this.prompt([ask]);
-      this.modelBasePath = path.join(this.ctx.modelsDir, this.modelAsk.baseModel);
+      this.modelBasePath = path.join(this.ctx.modelDir, this.modelAsk.baseModel);
     }
   }
 

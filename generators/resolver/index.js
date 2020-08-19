@@ -12,7 +12,7 @@ const { getAstFromCode, schemaAst } = require('../../lib/AST');
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
-    this.required = ['modelsDir', 'schemaDir', 'resolversDir', 'importExport'];
+    this.required = ['modelDir', 'schemaDir', 'resolverDir', 'importExport'];
     this.argument('resolverName', { type: String, desc: 'name of the file and the resolver', required: false });
     this.schemaBasePath = '';
     this.isNewResolver = true;
@@ -91,7 +91,7 @@ module.exports = class extends Generator {
     const schemaDef = schemaAst.getFunctionNamesFromAst(astRes);
     return template.createNewResolverWithDef(
       this,
-      this.ctx.resolversDir,
+      this.ctx.resolverDir,
       this.options.resolverName,
       {
         ...this.ctx,

@@ -24,7 +24,7 @@ module.exports = class extends Generator {
 
   setUpMongo() {
     const { ctx } = this;
-    if (!ctx.modelsDir) {
+    if (!ctx.modelDir) {
       this.log.info('Models not set up, setting up now... /n');
       const [modelsProdDeps, modelsDevDeps, modelsScripts] = template
         .createModels(this, ctx.srcPath || './src', {
@@ -39,7 +39,7 @@ module.exports = class extends Generator {
 
   newMongoModel() {
     const { ctx } = this;
-    if (ctx.modelsDir) {
+    if (ctx.modelDir) {
       this.log('Models already set up, creating new model... \n');
       if (!this.options.modelName) {
         this.log.error('Missing model name: yo labs:model [name] \n');
@@ -69,7 +69,7 @@ module.exports = class extends Generator {
 
   install() {
     const { ctx } = this;
-    if (!ctx.modelsDir) {
+    if (!ctx.modelDir) {
       const scripts = this.pkgScripts;
       const pkgJson = {
         scripts: {
