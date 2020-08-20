@@ -9,6 +9,6 @@ const mongoSchema = new mongoose.Schema(
   },
 );
 
-const mongoModel = mongoose.model('<%= name %> ', mongoSchema);
+const mongoModel = mongoose.model('<%= name %>', mongoSchema);
 
 <% if (importExport) { %>export default mongoModel;<% } %><% if (!importExport) { %>module.exports = mongoModel;<% } %>
