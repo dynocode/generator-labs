@@ -6,16 +6,16 @@ const { template } = require('../../lib/template');
 const { getFilePathToAllFilesInDir } = require('../../lib/fs');
 const { getAstFromCode, schemaAst } = require('../../lib/AST');
 
-/**
- * Add Lint to a project
- */
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
     this.required = ['modelDir', 'schemaDir', 'resolverDir', 'importExport'];
     this.argument('resolverName', { type: String, desc: 'name of the file and the resolver', required: false });
+
     this.schemaBasePath = '';
+
     this.isNewResolver = true;
+    this.newResolverName = '';
   }
 
   async init() {
@@ -88,16 +88,39 @@ module.exports = class extends Generator {
     }
     const file = this.fs.read(this.schemaBasePath);
     const astRes = getAstFromCode(file);
-    const schemaDef = schemaAst.getFunctionNamesFromAst(astRes);
-    return template.createNewResolverWithDef(
-      this,
-      this.ctx.resolverDir,
-      this.options.resolverName,
-      {
-        ...this.ctx,
-        ...schemaDef,
-      },
-    );
+    this.schemaDef = schemaAst.getFunctionNamesFromAst(astRes);
+
+    this.newResolverName = this.options.resolverName;
+    return this.schemaDef;
+  }
+
+  createResolverMeta() {
+    const fileName = this.options.resolverName
+      .trim()
+      .toLowerCase();
+    this.newResolverName = fileName;
+
+    this.resolverFnName = this.newResolverName.split('-').map((item) => {
+      const firstChar = item.substring(0, 1).toUpperCase();
+      return `${firstChar}${item.substring(1)}`;
+    }).join('');
+
+    this.fileType = 'js'; // TODO: ts;
+    this.fileName = `${this.newResolverName}.${this.fileType}`;
+    this.newResolverPath = path.join(this.ctx.srcPath, 'resolvers', this.fileName);
+  }
+
+  createResolverFromSchemaDef() {
+    if (this.schemaDef) {
+      template.createNewResolverWithDef(
+        this,
+        this.newResolverPath,
+        {
+          ...this.ctx,
+          ...this.schemaDef,
+        },
+      );
+    }
   }
 
   newResolver() {
@@ -109,25 +132,59 @@ module.exports = class extends Generator {
         this.log(this.help());
         process.exit(1);
       }
-      const fileName = this.options.resolverName
-        .trim()
-        .toLowerCase();
-
-      const resolverName = fileName.split('-').map((item) => {
-        const firstChar = item.substring(0, 1).toUpperCase();
-        return `${firstChar}${item.substring(1)}`;
-      }).join('');
 
       const [resolverProdDeps, resolverDevDeps, resolverScripts] = template
-        .createNewResolver(this, ctx.srcPath || './src', fileName, {
+        .createNewResolver(this, this.newResolverPath, {
           importExport: ctx.importExport || true,
-          name: resolverName,
+          name: this.resolverFnName,
         });
 
       this.deps.prod.push(...resolverProdDeps);
       this.deps.dev.push(...resolverDevDeps);
       Object.assign(this.pkgScripts, resolverScripts);
     }
+  }
+
+  initTest() {
+    this.testSetup();
+  }
+
+  createTestData() {
+    const filePath = path.join(this.ctx.resolverDir, this.fileName);
+
+    this.resolverFullPath = filePath;
+    this.resolverFileName = this.fileName;
+
+    this.resolverTestPath = path.join(this.ctx.resolverDir, 'test');
+
+    this.tests = [];
+
+    const specTestFileName = `${this.newResolverName}.spec.${this.fileType}`;
+
+    const relativePathToResolver = this.newResolverPath
+      .replace(path.join(this.ctx.srcPath, 'resolvers/'), '../')
+      .replace('.js', '');
+
+    const spec = {
+      type: 'spec',
+      path: this.resolverTestPath,
+      fileName: this.newResolverName,
+      filePath: path.join(this.resolverTestPath, specTestFileName),
+      template: {
+        importExport: this.ctx.importExport,
+        relativePathToResolver,
+        resolverName: this.newResolverName,
+        schemaDef: this.schemaDef,
+      },
+    };
+
+    this.tests.push(spec);
+  }
+
+  createTestFiles() {
+    this.tests.forEach((item) => {
+      template.test.createResolverSpecTest(this, item.path, item.fileName, item.template);
+    });
   }
 
   install() {
