@@ -1,81 +1,24 @@
-const Generator = require('yeoman-generator');
+const Generator = require('../../lib/generator/base');
 
 const { template } = require('../../lib/template');
 
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
-    this.deps = {
-      dev: [],
-      prod: [],
-    };
-    this.pkgScripts = {};
-    this.ctx = {};
+    this.required = [
+      'appName',
+      'serverPath',
+      'srcPath',
+      'modelDir',
+      'schemaDir',
+      'resolverDir',
+      'useBabel',
+      'importExport',
+    ];
   }
 
-  async prompting() {
-    this.answer = await this.prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: 'Your project name',
-        default: this.appname,
-      },
-      {
-        type: 'list',
-        name: 'language',
-        message: 'Select language',
-        choices: [
-          'JS',
-          'TS',
-        ],
-      },
-      {
-        type: 'list',
-        name: 'runtime',
-        message: 'Select runtime',
-        choices: [
-          'Node',
-          'Deno',
-        ],
-      },
-      {
-        type: 'confirm',
-        name: 'useBabel',
-        message: 'Use Babel?',
-        default: true,
-      },
-    ]);
-  }
-
-  async importRequirePrompt() {
-    if (this.answer.useBabel) {
-      const useImport = await this.prompt([
-        {
-          type: 'confirm',
-          name: 'importExport',
-          message: 'Use import/export?',
-          default: true,
-        },
-      ]);
-      Object.assign(this.answer, useImport);
-    }
-  }
-
-  createContext() {
-    // TODO: ask if server &| client
-    const ctx = {
-      serverPath: './',
-      srcPath: './src',
-      babel: this.answer.useBabel,
-      importExport: this.answer.importExport || false,
-    };
-    if (this.answer && this.answer.serverClient) {
-      ctx.serverPath = './server';
-      ctx.srcPath = './server/src';
-    }
-    Object.assign(this.ctx, ctx);
-    this.config.set(ctx);
+  async init() {
+    await this.resolveRequired();
   }
 
   addMinimumBoilerplate() {
@@ -145,7 +88,7 @@ module.exports = class extends Generator {
 
   initBabel() {
     const { ctx } = this;
-    if (ctx.babel) {
+    if (ctx.useBabel) {
       const [prodDeps, devDeps, scripts] = template
         .createBasicBabel(this, ctx.serverPath);
 
@@ -158,7 +101,7 @@ module.exports = class extends Generator {
   install() {
     const scripts = this.pkgScripts;
     const pkgJson = {
-      name: this.answer.name,
+      name: this.ctx.appName,
       version: '1.0.0',
       scripts: {
         ...scripts,
