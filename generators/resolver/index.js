@@ -60,7 +60,7 @@ module.exports = class extends Generator {
       if (this.options.resolverName) {
         matchInput = schemaFileNames.find((item) => {
           const name = item.replace('.js', '').replace('/', '');
-          if (this.options.schemaName === name) {
+          if (this.options.resolverName === name) {
             return true;
           }
           return false;
