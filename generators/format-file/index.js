@@ -1,8 +1,7 @@
 const path = require('path');
-const prettier = require('prettier');
 
 const Generator = require('../../lib/generator/base');
-const { readFile, writeFile } = require('../../lib/fs');
+const { makePrettier, lintFix } = require('../../lib/format');
 
 module.exports = class extends Generator {
   constructor(args, opts) {
@@ -80,13 +79,9 @@ module.exports = class extends Generator {
   async formatFile() {
     if (this.isFile) {
       this.log(`Formatting file: ${this.formatPath}`);
-      const file = (await readFile(this.formatPath)).toString('utf8');
-      const formatted = prettier.format(file, {
-        semi: true,
-        singleQuote: true,
-        parser: 'babel',
-      });
-      await writeFile(this.formatPath, formatted);
+      // TODO: do all with lint.
+      await makePrettier(this.formatPath);
+      await lintFix(this.formatPath);
     }
   }
 };
