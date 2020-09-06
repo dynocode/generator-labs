@@ -21,18 +21,10 @@ module.exports = class extends Generator {
 
   async init() {
     await this.resolveRequired();
+    this.getNewFileMeta(this.ctx.resolverDir);
     if (!this.options.name && !this.ctx.haveResolver) {
       this.isNewResolver = false;
     }
-  }
-
-  meta() {
-    this.fileExtension = '.js';
-    this.newFileName = `${this.options.name}${this.fileExtension}`;
-    this.indexFileName = `index${this.fileExtension}`;
-
-    this.newFilePath = path.join(this.ctx.resolverDir, this.newFileName);
-    this.indexFilePath = path.join(this.ctx.resolverDir, this.indexFileName);
   }
 
   setUpResolvers() {
