@@ -11,7 +11,7 @@ const { formatVMemFile } = require('../../lib/format');
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
-    this.argument('schemaName', { type: String, desc: 'name of the file and the schema', required: false });
+    this.argument('name', { type: String, desc: 'name of the file and the schema', required: false });
     this.required = ['modelDir', 'schemaDir', 'importExport'];
     this.modelBasePath = '';
     this.isNewModel = true;
@@ -19,7 +19,7 @@ module.exports = class extends Generator {
 
   async init() {
     await this.resolveRequired();
-    if (!this.options.schemaName && !this.ctx.haveSchema) {
+    if (!this.options.name && !this.ctx.haveSchema) {
       this.isNewModel = false;
     }
   }
@@ -27,7 +27,7 @@ module.exports = class extends Generator {
   meta() {
     this.fileExtension = '.js';
     this.indexFileName = `index${this.fileExtension}`;
-    this.fileName = `${this.options.schemaName}${this.fileExtension}`;
+    this.fileName = `${this.options.name}${this.fileExtension}`;
     this.newSchemaFilePath = path.join(this.ctx.schemaDir, this.fileName);
     this.schemaIndexFilePath = path.join(this.ctx.schemaDir, this.indexFileName);
   }
@@ -64,10 +64,10 @@ module.exports = class extends Generator {
       const modelFilesFullPath = await getFilePathToAllFilesInDir(this.ctx.modelDir);
       const modelFileNames = modelFilesFullPath.map((item) => item.replace(this.ctx.modelDir, ''));
       let matchInput;
-      if (this.options.schemaName) {
+      if (this.options.name) {
         matchInput = modelFileNames.find((item) => {
           const name = item.replace('.js', '').replace('/', '');
-          if (this.options.schemaName === name) {
+          if (this.options.name === name) {
             return true;
           }
           return false;
@@ -111,16 +111,16 @@ module.exports = class extends Generator {
   newSchema() {
     const { ctx } = this;
     if (!this.useModelAsBase && this.isNewModel) {
-      if (!this.options.schemaName) {
+      if (!this.options.name) {
         this.log.error('Missing schema name: yo labs:schema [name] \n');
         this.log(this.help());
         process.exit(1);
       }
-      const fileName = this.options.schemaName
+      const fileName = this.options.name
         .trim()
         .toLowerCase();
 
-      const schemaName = fileName.split('-').map((item) => {
+      const name = fileName.split('-').map((item) => {
         const firstChar = item.substring(0, 1).toUpperCase();
         return `${firstChar}${item.substring(1)}`;
       }).join('');
@@ -128,7 +128,7 @@ module.exports = class extends Generator {
       const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
         .createNewSchema(this, this.newSchemaFilePath, {
           importExport: ctx.importExport || true,
-          name: schemaName,
+          name,
         });
 
       this.deps.prod.push(...schemaProdDeps);
