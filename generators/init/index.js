@@ -41,6 +41,8 @@ module.exports = class extends Generator {
     const [basicProdDeps, basicDevDeps, basicScripts] = template
       .basicServerDefault(this, ctx.serverPath);
 
+    this.config.set({ haveLint: true });
+
     this.deps.prod.push(...basicProdDeps);
     this.deps.dev.push(...basicDevDeps);
     Object.assign(this.pkgScripts, basicScripts);

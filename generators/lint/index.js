@@ -20,6 +20,8 @@ module.exports = class extends Generator {
     const [lintProdDeps, lintDevDeps, lintScripts] = template
       .createLint(this, './');
 
+    this.config.set({ haveLint: true });
+
     this.deps.prod.push(...lintProdDeps);
     this.deps.dev.push(...lintDevDeps);
     Object.assign(this.pkgScripts, lintScripts);
