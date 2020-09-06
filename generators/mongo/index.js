@@ -9,7 +9,7 @@ module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
     this.required = ['modelDir', 'importExport'];
-    this.argument('modelName', { type: String, desc: 'name of the file and the model', required: false });
+    this.argument('name', { type: String, desc: 'name of the file and the model', required: false });
   }
 
   async init() {
@@ -38,16 +38,16 @@ module.exports = class extends Generator {
     const { ctx } = this;
     if (this.isNew) {
       this.log('Models already set up, creating new model... \n');
-      if (!this.options.modelName) {
+      if (!this.options.name) {
         this.log.error('Missing model name: yo labs:model [name] \n');
         this.log(this.help());
         process.exit(1);
       }
-      const fileName = this.options.modelName
+      const fileName = this.options.name
         .trim()
         .toLowerCase();
 
-      const modelName = fileName.split('-').map((item) => {
+      const name = fileName.split('-').map((item) => {
         const firstChar = item.substring(0, 1).toUpperCase();
         return `${firstChar}${item.substring(1)}`;
       }).join('');
@@ -55,7 +55,7 @@ module.exports = class extends Generator {
       const [modelsProdDeps, modelsDevDeps, modelsScripts] = template
         .createModel(this, ctx.srcPath || './src', fileName, {
           importExport: ctx.importExport || true,
-          name: modelName,
+          name,
         });
 
       this.deps.prod.push(...modelsProdDeps);

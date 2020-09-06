@@ -11,28 +11,20 @@ module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
     this.required = ['srcPath', 'modelDir', 'schemaDir', 'resolverDir', 'importExport'];
-    this.argument('resolverName', { type: String, desc: 'name of the file and the resolver', required: false });
+    this.argument('name', { type: String, desc: 'name of the file and the resolver', required: false });
 
     this.schemaBasePath = '';
 
-    this.isNewResolver = true;
+    this.isNewFile = true;
     this.newResolverName = '';
   }
 
   async init() {
     await this.resolveRequired();
-    if (!this.options.resolverName && !this.ctx.haveResolver) {
-      this.isNewResolver = false;
+    this.getNewFileMeta(this.ctx.resolverDir);
+    if (!this.options.name && !this.ctx.haveResolver) {
+      this.isNewFile = false;
     }
-  }
-
-  meta() {
-    this.fileExtension = '.js';
-    this.newFileName = `${this.options.resolverName}${this.fileExtension}`;
-    this.indexFileName = `index${this.fileExtension}`;
-
-    this.newFilePath = path.join(this.ctx.resolverDir, this.newFileName);
-    this.indexFilePath = path.join(this.ctx.resolverDir, this.indexFileName);
   }
 
   setUpResolvers() {
@@ -51,7 +43,7 @@ module.exports = class extends Generator {
   }
 
   async baseResolverOnSchemaAsk() {
-    if (this.isNewResolver) {
+    if (this.isNewFile) {
       const ask = {
         type: 'confirm',
         name: 'resolverBasedOnSchema',
@@ -63,14 +55,14 @@ module.exports = class extends Generator {
   }
 
   async getResolverSchemaBase() {
-    if (this.useSchemaAsBase && this.isNewResolver) {
+    if (this.useSchemaAsBase && this.isNewFile) {
       const schemaFilesFullPaths = await getFilePathToAllFilesInDir(this.ctx.schemaDir);
       const schemaFileNames = schemaFilesFullPaths.map((item) => item.replace(this.ctx.schemaDir, ''));
       let matchInput;
-      if (this.options.resolverName) {
+      if (this.options.name) {
         matchInput = schemaFileNames.find((item) => {
           const name = item.replace('.js', '').replace('/', '');
-          if (this.options.resolverName === name) {
+          if (this.options.name === name) {
             return true;
           }
           return false;
@@ -93,19 +85,19 @@ module.exports = class extends Generator {
   }
 
   getBaseSchema() {
-    if (!this.useSchemaAsBase || !this.schemaBasePath || !this.isNewResolver) {
+    if (!this.useSchemaAsBase || !this.schemaBasePath || !this.isNewFile) {
       return null;
     }
     const file = this.fs.read(this.schemaBasePath);
     const astRes = getAstFromCode(file);
     this.schemaDef = schemaAst.getFunctionNamesFromAst(astRes);
 
-    this.newResolverName = this.options.resolverName;
+    this.newResolverName = this.options.name;
     return this.schemaDef;
   }
 
   createResolverMeta() {
-    const fileName = this.options.resolverName
+    const fileName = this.options.name
       .trim()
       .toLowerCase();
     this.newResolverName = fileName;
@@ -135,9 +127,9 @@ module.exports = class extends Generator {
 
   newResolver() {
     const { ctx } = this;
-    if (!this.useSchemaAsBase && this.isNewResolver) {
+    if (!this.useSchemaAsBase && this.isNewFile) {
       this.log('Resolvers already set up, creating new resolver... \n');
-      if (!this.options.resolverName) {
+      if (!this.options.name) {
         this.log.error('Missing resolver name: yo labs:resolver [name] \n');
         this.log(this.help());
         process.exit(1);

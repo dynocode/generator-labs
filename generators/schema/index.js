@@ -11,33 +11,30 @@ const { formatVMemFile } = require('../../lib/format');
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
-    this.argument('schemaName', { type: String, desc: 'name of the file and the schema', required: false });
+    this.argument('name', { type: String, desc: 'name of the file and the schema', required: false });
     this.required = ['modelDir', 'schemaDir', 'importExport'];
     this.modelBasePath = '';
-    this.isNewModel = true;
+    this.isNewFile = true;
   }
 
   async init() {
     await this.resolveRequired();
-    if (!this.options.schemaName && !this.ctx.haveSchema) {
-      this.isNewModel = false;
+    this.getNewFileMeta(this.ctx.schemaDir);
+    if (!this.options.name && !this.ctx.haveSchema) {
+      this.isNewFile = false;
     }
   }
 
-  meta() {
-    this.fileExtension = '.js';
-    this.indexFileName = `index${this.fileExtension}`;
-    this.fileName = `${this.options.schemaName}${this.fileExtension}`;
-    this.newSchemaFilePath = path.join(this.ctx.schemaDir, this.fileName);
-    this.schemaIndexFilePath = path.join(this.ctx.schemaDir, this.indexFileName);
-  }
-
+  /**
+   * Init schema if not already exists in project
+   * Defaults to create an example.js schema file.
+   */
   setUpSchema() {
     const { ctx } = this;
     if (!ctx.haveSchema) {
       this.log.info('Schema not set up, setting up now... /n');
       const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-        .createSchema(this, this.newSchemaFilePath, this.schemaIndexFilePath, {
+        .createSchema(this, this.newFilePath, this.indexFilePath, {
           importExport: ctx.importExport || true,
         });
       this.config.set({ haveSchema: true });
@@ -47,8 +44,11 @@ module.exports = class extends Generator {
     }
   }
 
+  /**
+   * Ask the user if the schema should be based on a model.
+   */
   async baseSchemaOnModelAsk() {
-    if (this.isNewModel) {
+    if (this.isNewFile && this.ctx.haveModel) {
       const ask = {
         type: 'confirm',
         name: 'modelBasedOnSchema',
@@ -59,15 +59,18 @@ module.exports = class extends Generator {
     }
   }
 
+  /**
+   * Get the model to base the schema on.
+   */
   async getSchemaModelBase() {
-    if (this.useModelAsBase && this.isNewModel) {
+    if (this.useModelAsBase && this.isNewFile) {
       const modelFilesFullPath = await getFilePathToAllFilesInDir(this.ctx.modelDir);
       const modelFileNames = modelFilesFullPath.map((item) => item.replace(this.ctx.modelDir, ''));
       let matchInput;
-      if (this.options.schemaName) {
+      if (this.options.name) {
         matchInput = modelFileNames.find((item) => {
           const name = item.replace('.js', '').replace('/', '');
-          if (this.options.schemaName === name) {
+          if (this.options.name === name) {
             return true;
           }
           return false;
@@ -89,8 +92,11 @@ module.exports = class extends Generator {
     }
   }
 
+  /**
+   * Create a schema based on a model
+   */
   getBaseModel() {
-    if (!this.useModelAsBase || !this.modelBasePath || !this.isNewModel) {
+    if (!this.useModelAsBase || !this.modelBasePath || !this.isNewFile) {
       return null;
     }
     const modelPath = this.modelBasePath;
@@ -100,7 +106,7 @@ module.exports = class extends Generator {
     const schemaData = createSchemaFromModelDef(modelDef);
     const query = Object.values(schemaData.query).join('\n');
     const mutations = Object.values(schemaData.mutations).join('\n');
-    return template.createNewSchemaWithDef(this, this.newSchemaFilePath, {
+    return template.createNewSchemaWithDef(this, this.newFilePath, {
       ...this.ctx,
       query,
       mutations,
@@ -108,27 +114,30 @@ module.exports = class extends Generator {
     });
   }
 
+  /**
+   * Create a boilerplate schema file
+   */
   newSchema() {
     const { ctx } = this;
-    if (!this.useModelAsBase && this.isNewModel) {
-      if (!this.options.schemaName) {
+    if (!this.useModelAsBase && this.isNewFile) {
+      if (!this.options.name) {
         this.log.error('Missing schema name: yo labs:schema [name] \n');
         this.log(this.help());
         process.exit(1);
       }
-      const fileName = this.options.schemaName
+      const fileName = this.options.name
         .trim()
         .toLowerCase();
 
-      const schemaName = fileName.split('-').map((item) => {
+      const name = fileName.split('-').map((item) => {
         const firstChar = item.substring(0, 1).toUpperCase();
         return `${firstChar}${item.substring(1)}`;
       }).join('');
 
       const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-        .createNewSchema(this, this.newSchemaFilePath, {
+        .createNewSchema(this, this.newFilePath, {
           importExport: ctx.importExport || true,
-          name: schemaName,
+          name,
         });
 
       this.deps.prod.push(...schemaProdDeps);
@@ -137,10 +146,16 @@ module.exports = class extends Generator {
     }
   }
 
+  /**
+   * Format the new file(s)
+   */
   async format() {
-    await formatVMemFile(this, this.newSchemaFilePath);
+    await formatVMemFile(this, this.newFilePath);
   }
 
+  /**
+   * Assemble the package.json file based on the context
+   */
   install() {
     if (this.deps.prod.length > 0 || this.deps.dev.length > 0) {
       const scripts = this.pkgScripts;
