@@ -1,3 +1,4 @@
+const path = require('path');
 const Generator = require('../../lib/generator/base');
 
 const { template } = require('../../lib/template');
@@ -51,8 +52,10 @@ module.exports = class extends Generator {
 
   initGqlSchema() {
     const { ctx } = this;
+    this.schemaExampleFilePath = path.join(ctx.schemaDir, 'example.js');
+    this.schemaIndexFilePath = path.join(ctx.schemaDir, 'index.js');
     const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-      .createSchema(this, ctx.srcPath, {
+      .createSchema(this, this.schemaExampleFilePath, this.schemaIndexFilePath, {
         importExport: ctx.importExport,
       });
     this.config.set({ haveSchema: true });

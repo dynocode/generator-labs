@@ -6,6 +6,7 @@ const { template } = require('../../lib/template');
 const { getFilePathToAllFilesInDir } = require('../../lib/fs');
 const ast = require('../../lib/AST');
 const { createSchemaFromModelDef } = require('../../lib/schema');
+const { formatVMemFile } = require('../../lib/format');
 
 module.exports = class extends Generator {
   constructor(args, opts) {
@@ -23,12 +24,20 @@ module.exports = class extends Generator {
     }
   }
 
+  meta() {
+    this.fileExtension = '.js';
+    this.indexFileName = `index${this.fileExtension}`;
+    this.fileName = `${this.options.schemaName}${this.fileExtension}`;
+    this.newSchemaFilePath = path.join(this.ctx.schemaDir, this.fileName);
+    this.schemaIndexFilePath = path.join(this.ctx.schemaDir, this.indexFileName);
+  }
+
   setUpSchema() {
     const { ctx } = this;
     if (!ctx.haveSchema) {
       this.log.info('Schema not set up, setting up now... /n');
       const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-        .createSchema(this, ctx.srcPath || './src', {
+        .createSchema(this, this.newSchemaFilePath, this.schemaIndexFilePath, {
           importExport: ctx.importExport || true,
         });
       this.config.set({ haveSchema: true });
@@ -91,7 +100,7 @@ module.exports = class extends Generator {
     const schemaData = createSchemaFromModelDef(modelDef);
     const query = Object.values(schemaData.query).join('\n');
     const mutations = Object.values(schemaData.mutations).join('\n');
-    return template.createNewSchemaWithDef(this, this.ctx.schemaDir, this.options.schemaName, {
+    return template.createNewSchemaWithDef(this, this.newSchemaFilePath, {
       ...this.ctx,
       query,
       mutations,
@@ -117,7 +126,7 @@ module.exports = class extends Generator {
       }).join('');
 
       const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-        .createNewSchema(this, ctx.srcPath || './src', fileName, {
+        .createNewSchema(this, this.newSchemaFilePath, {
           importExport: ctx.importExport || true,
           name: schemaName,
         });
@@ -126,6 +135,10 @@ module.exports = class extends Generator {
       this.deps.dev.push(...schemaDevDeps);
       Object.assign(this.pkgScripts, schemaScripts);
     }
+  }
+
+  async format() {
+    await formatVMemFile(this, this.newSchemaFilePath);
   }
 
   install() {
