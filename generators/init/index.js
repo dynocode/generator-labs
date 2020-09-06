@@ -1,3 +1,4 @@
+const path = require('path');
 const Generator = require('../../lib/generator/base');
 
 const { template } = require('../../lib/template');
@@ -21,6 +22,14 @@ module.exports = class extends Generator {
     await this.resolveRequired();
   }
 
+  meta() {
+    this.schemaExampleFilePath = path.join(this.ctx.schemaDir, 'example.js');
+    this.schemaIndexFilePath = path.join(this.ctx.schemaDir, 'index.js');
+
+    this.resolverExampleFilePath = path.join(this.ctx.resolverDir, 'example.js');
+    this.resolverIndexFilePath = path.join(this.ctx.resolverDir, 'index.js');
+  }
+
   addMinimumBoilerplate() {
     const { ctx } = this;
 
@@ -31,6 +40,8 @@ module.exports = class extends Generator {
 
     const [basicProdDeps, basicDevDeps, basicScripts] = template
       .basicServerDefault(this, ctx.serverPath);
+
+    this.config.set({ haveLint: true });
 
     this.deps.prod.push(...basicProdDeps);
     this.deps.dev.push(...basicDevDeps);
@@ -52,7 +63,7 @@ module.exports = class extends Generator {
   initGqlSchema() {
     const { ctx } = this;
     const [schemaProdDeps, schemaDevDeps, schemaScripts] = template
-      .createSchema(this, ctx.srcPath, {
+      .createSchema(this, this.schemaExampleFilePath, this.schemaIndexFilePath, {
         importExport: ctx.importExport,
       });
     this.config.set({ haveSchema: true });
@@ -64,7 +75,7 @@ module.exports = class extends Generator {
   initGqlResolver() {
     const { ctx } = this;
     const [resolversProdDeps, resolversDevDeps, resolversScripts] = template
-      .createResolvers(this, ctx.srcPath, {
+      .createResolvers(this, this.resolverExampleFilePath, this.resolverIndexFilePath, {
         importExport: ctx.importExport,
       });
     this.config.set({ haveResolver: true });
