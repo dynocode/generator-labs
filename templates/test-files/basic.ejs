@@ -1,0 +1,9 @@
+<% if (importExport) { %>import { expect } from 'chai';<% } %><% if (!importExport) { %>const { expect } = require('chai');<% } %>
+
+<% if (pathToFile) { %>import index from '<%= pathToFile %>';<% } %><% if (!importExport) { %>const index = require('<%= pathToFile %>');<% } %>
+
+describe('<%= fileName %> ', () => {
+  it('should ...', async () => {
+
+  });
+});
