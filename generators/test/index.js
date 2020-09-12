@@ -41,9 +41,17 @@ module.exports = class extends Generator {
     if (!haveTest) {
       const [testProd, testDev, testScript] = test
         .createBasicSuite(this, this.contextRoot, this.ctx);
+      const [testCovProd, testCovDev, testCovScript] = test
+        .createReporterSuite(this, this.contextRoot, this.ctx);
+
       this.deps.prod.push(...testProd);
       this.deps.dev.push(...testDev);
       Object.assign(this.pkgScripts, testScript);
+
+      this.deps.prod.push(...testCovProd);
+      this.deps.dev.push(...testCovDev);
+      Object.assign(this.pkgScripts, testCovScript);
+
       this.config.set('haveTest', true);
     }
   }
@@ -74,6 +82,10 @@ module.exports = class extends Generator {
   }
 
   async createTestFile() {
+    if (!this.testFileName) {
+      this.log.error('Supply a name, or a file');
+      process.exit(1);
+    }
     const templateCtx = {
       ...this.ctx,
       fileName: this.testFileName,
