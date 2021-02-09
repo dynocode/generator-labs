@@ -3,7 +3,7 @@ module.exports = {
     ecmaVersion: 2018,
     sorceType: 'module',
   },
-  extends: ['airbnb-base'],
+  extends: ['eslint:recommended'],
   plugins: [
     'chai-friendly',
   ],
@@ -19,6 +19,20 @@ module.exports = {
     'chai-friendly/no-unused-expressions': 2,
     'indent': ['error', 2, { SwitchCase: 1 }],
     'camelcase': 0,
-    'no-underscore-dangle': ['error', { allow: ['_id', '__set__', '__get__'] }],
+    'comma-dangle': ['error', 'always-multiline'],
+    'no-unused-vars': [
+      'error', {
+        vars: 'all',
+        args: 'after-used',
+        ignoreRestSiblings: false,
+        argsIgnorePattern: '^_',
+      },
+    ],
+    'no-underscore-dangle': [
+      'error',
+      {
+        allow: ['_id', '__set__', '__get__'],
+      },
+    ],
   },
 };

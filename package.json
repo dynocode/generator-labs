@@ -12,7 +12,8 @@
     "test": "mocha 'test/**/**.{spec,int}.js'",
     "test:spec": "mocha 'test/**/**.spec.js'",
     "test:int": "mocha 'test/**/**.int.js'",
-    "lint": "eslint --ignore-path .eslintignore ./"
+    "lint": "eslint --ignore-path .eslintignore ./",
+    "rmtemp": "rimraf .temp"
   },
   "keywords": [
     "yeoman-generator"
@@ -36,6 +37,7 @@
     "eslint-plugin-import": "^2.22.x",
     "fs-extra": "^9.1.0",
     "mocha": "^8.2.1",
+    "rimraf": "^3.0.2",
     "sinon": "^9.2.4",
     "yeoman-test": "^4.0.0"
   }

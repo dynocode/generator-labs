@@ -2,3 +2,5 @@
 /DEV
 .env
 /TODO.md
+
+.DS_Store
