@@ -1,4 +1,4 @@
-const Generator = require('yeoman-generator');
+const Generator = require('../../lib/generator/base');
 
 const { template } = require('../../lib/template');
 
@@ -8,12 +8,13 @@ const { template } = require('../../lib/template');
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
-    this.deps = {
-      dev: [],
-      prod: [],
-    };
-    this.pkgScripts = {};
-    this.ctx = {};
+    this.required = [
+      'language',
+    ];
+  }
+
+  async init() {
+    await this.resolveRequired();
   }
 
   addLint() {
